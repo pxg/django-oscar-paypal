@@ -335,6 +335,7 @@ class SuccessResponseView(PaymentDetailsView):
         first_name = last_name = None
         parts = ship_to_name.split()
         if len(parts) == 1:
+            first_name = ""
             last_name = ship_to_name
         elif len(parts) > 1:
             first_name = parts[0]
