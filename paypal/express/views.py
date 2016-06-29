@@ -60,6 +60,9 @@ class RedirectView(CheckoutSessionMixin, RedirectView):
     as_payment_method = False
 
     def get_redirect_url(self, **kwargs):
+        """
+        Construct URL to send to paypal
+        """
         try:
             basket = self.build_submission()['basket']
             url = self._get_redirect_url(basket, **kwargs)
@@ -288,10 +291,11 @@ class SuccessResponseView(PaymentDetailsView):
         return self.submit(**submission)
 
     def build_submission(self, **kwargs):
+        """
+        This is called when the user is returning from Paypal to the Oscar site
+        """
         submission = super(
             SuccessResponseView, self).build_submission(**kwargs)
-        # Pass the user email so it can be stored with the order
-        submission['order_kwargs']['guest_email'] = self.txn.value('EMAIL')
         # Pass PP params
         submission['payment_kwargs']['payer_id'] = self.payer_id
         submission['payment_kwargs']['token'] = self.token
