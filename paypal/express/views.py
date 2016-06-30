@@ -327,34 +327,6 @@ class SuccessResponseView(PaymentDetailsView):
         self.add_payment_event('Settled', confirm_txn.amount,
                                reference=confirm_txn.correlation_id)
 
-    def get_shipping_address(self, basket):
-        """
-        Return a created shipping address instance, created using
-        the data returned by PayPal.
-        """
-        # Determine names - PayPal uses a single field
-        ship_to_name = self.txn.value('PAYMENTREQUEST_0_SHIPTONAME')
-        if ship_to_name is None:
-            return None
-        first_name = last_name = None
-        parts = ship_to_name.split()
-        if len(parts) == 1:
-            first_name = ""
-            last_name = ship_to_name
-        elif len(parts) > 1:
-            first_name = parts[0]
-            last_name = " ".join(parts[1:])
-        return ShippingAddress(
-            first_name=first_name,
-            last_name=last_name,
-            line1=self.txn.value('PAYMENTREQUEST_0_SHIPTOSTREET'),
-            line2=self.txn.value('PAYMENTREQUEST_0_SHIPTOSTREET2', default=""),
-            line4=self.txn.value('PAYMENTREQUEST_0_SHIPTOCITY', default=""),
-            state=self.txn.value('PAYMENTREQUEST_0_SHIPTOSTATE', default=""),
-            postcode=self.txn.value('PAYMENTREQUEST_0_SHIPTOZIP', default=""),
-            country=Country.objects.get(iso_3166_1_a2=self.txn.value('PAYMENTREQUEST_0_SHIPTOCOUNTRYCODE'))
-        )
-
     def _get_shipping_method_by_name(self, name, basket, shipping_address=None):
         methods = Repository().get_shipping_methods(
             basket=basket, user=self.request.user,
