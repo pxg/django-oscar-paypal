@@ -221,7 +221,11 @@ class SuccessResponseView(PaymentDetailsView):
             "Basket #%s - showing preview with payer ID %s and token %s",
             kwargs['basket'].id, self.payer_id, self.token)
 
-        return super(SuccessResponseView, self).get(request, *args, **kwargs)
+        # Submit the payment here. No preview step
+        submission = self.build_submission(basket=kwargs['basket'])
+        return self.submit(**submission)
+        # return HttpResponseRedirect('/asdf')
+        # return super(SuccessResponseView, self).get(request, *args, **kwargs)
 
     def load_frozen_basket(self, basket_id):
         # Lookup the frozen basket that this txn corresponds to
@@ -267,6 +271,7 @@ class SuccessResponseView(PaymentDetailsView):
             "- please try again later"
         )
         try:
+            # TODO: these will be GET when skipping preview
             self.payer_id = request.POST['payer_id']
             self.token = request.POST['token']
         except KeyError:
