@@ -391,6 +391,10 @@ class ShippingOptionsView(View):
         # Create a shipping address instance using the data passed back
         country_code = self.request.POST.get(
             'PAYMENTREQUEST_0_SHIPTOCOUNTRY', None)
+        if country_code is None:
+            country_code = self.request.POST.get('SHIPTOCOUNTRY', None)
+            if country_code:
+                country_code = country_code.upper()
         try:
             country = Country.objects.get(iso_3166_1_a2=country_code)
         except Country.DoesNotExist:
