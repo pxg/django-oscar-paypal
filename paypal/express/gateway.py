@@ -299,8 +299,8 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
             if key in us_states.STATES_NORMALIZED:
                 params['SHIPTOSTATE'] = us_states.STATES_NORMALIZED[key]
 
-    elif no_shipping:
-        params['NOSHIPPING'] = 1
+    # Don't let user change their shipping address on Paypal
+    params['NOSHIPPING'] = 1
 
     # Shipping charges
     params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(D('0.00'))
