@@ -14,7 +14,6 @@ from django.utils.http import urlencode
 from django.utils import six
 from django.utils.translation import ugettext_lazy as _
 
-import oscar
 from oscar.apps.payment.exceptions import UnableToTakePayment
 from oscar.core.exceptions import ModuleNotFoundError
 from oscar.core.loading import get_class, get_model
@@ -66,14 +65,11 @@ class RedirectView(CheckoutSessionMixin, RedirectView):
         try:
             basket = self.build_submission()['basket']
             url = self._get_redirect_url(basket, **kwargs)
-        except PayPalError as ppe:
+        except PayPalError:
             messages.error(
-                self.request, ppe.message)
-            if self.as_payment_method:
-                url = reverse('checkout:payment-details')
-            else:
-                url = reverse('basket:summary')
-            return url
+                self.request,
+                'There was a problem with Paypal, please try a different payment method')
+            return reverse('checkout:payment-details')
         except InvalidBasket as e:
             messages.warning(self.request, six.text_type(e))
             return reverse('basket:summary')
