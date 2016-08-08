@@ -2,9 +2,10 @@ from __future__ import unicode_literals
 import requests
 import time
 
-from django.utils.http import urlencode
 from django.utils import six
+from django.utils.http import urlencode
 from django.utils.six.moves.urllib.parse import parse_qsl
+from raven.contrib.django.raven_compat.models import client
 
 from paypal import exceptions
 
@@ -26,13 +27,18 @@ def post(url, params):
         raise exceptions.PayPalError("Unable to communicate with PayPal")
 
     # Convert response into a simple key-value format
-    pairs = {}
-    for key, value in parse_qsl(response.content):
-        if isinstance(key, six.binary_type):
-            key = key.decode('utf8')
-        if isinstance(value, six.binary_type):
-            value = value.decode('utf8')
-        pairs[key] = value
+    try:
+        pairs = {}
+        for key, value in parse_qsl(response.content):
+            if isinstance(key, six.binary_type):
+                key = key.decode('utf8')
+            if isinstance(value, six.binary_type):
+                value = value.decode('utf8')
+            pairs[key] = value
+    except Exception:
+        client.user_context({'context': response.content})
+        client.captureException()
+        raise exceptions.PayPalError("There was an error with PayPal")
 
     # Add audit information
     pairs['_raw_request'] = payload
