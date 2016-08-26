@@ -43,23 +43,26 @@ def _format_currency(amt):
     return amt.quantize(D('0.01'))
 
 
-# TODO: needs tests
 def _get_token_api_type(token, settings):
     """
-    This will need to be replace with redis or something which isn't
-    constrained to one server
+    Connect to Redis and retrieve the currency code for the token
     """
-    return 'GBP'
-    # with open('/tmp/paypal_{}'.format(token), 'r') as my_file:
-    #     return my_file.read().replace('\n', '')
+    redis_connection = redis.StrictRedis(
+        host=settings.PAYPAL_REDIS_HOST,
+        port=settings.PAYPAL_REDIS_PORT,
+        db=settings.PAYPAL_REDIS_DB)
+    return redis_connection.get(token)
 
 
-# TODO: needs tests
 def _set_token_api_type(token, currency_code, settings):
-    #r = redis.StrictRedis(host='localhost', port=6379, db=0)
-    pass
-    # with open('/tmp/paypal_{}'.format(token), 'w') as my_file:
-    #     my_file.write(currency_code)
+    """
+    Save the currency code to redis using the token as a key
+    """
+    redis_connection = redis.StrictRedis(
+        host=settings.PAYPAL_REDIS_HOST,
+        port=settings.PAYPAL_REDIS_PORT,
+        db=settings.PAYPAL_REDIS_DB)
+    return redis_connection.set(token, currency_code)
 
 
 def _fetch_response(method, extra_params):
@@ -87,7 +90,6 @@ def _fetch_response(method, extra_params):
     token = extra_params.get('TOKEN')
     if token and _get_token_api_type(token, settings) == 'USD':
         params.update(us_params)
-
     params.update(extra_params)
 
     if getattr(settings, 'PAYPAL_SANDBOX_MODE', True):
@@ -131,6 +133,9 @@ def _fetch_response(method, extra_params):
             txn.token = params['TOKEN']
             txn.amount = D(pairs['PAYMENTINFO_0_AMT'])
             txn.currency = pairs['PAYMENTINFO_0_CURRENCYCODE']
+            # Need to confirm this is the final payment and we should delete
+            # the token here
+            # import pdb; pdb.set_trace()
         # Store token with currency type here
         _set_token_api_type(txn.token, txn.currency, settings)
     else:
