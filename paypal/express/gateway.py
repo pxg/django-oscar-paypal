@@ -340,8 +340,8 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
             if key in us_states.STATES_NORMALIZED:
                 params['SHIPTOSTATE'] = us_states.STATES_NORMALIZED[key]
 
-    elif no_shipping:
-        params['NOSHIPPING'] = 1
+    # Don't let user change their shipping address on Paypal
+    params['NOSHIPPING'] = 1
 
     # Shipping charges
     params['PAYMENTREQUEST_0_SHIPPINGAMT'] = _format_currency(D('0.00'))
@@ -382,11 +382,10 @@ def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_u
 
     # Construct return URL
     if getattr(settings, 'PAYPAL_SANDBOX_MODE', True):
-        url = 'https://www.sandbox.paypal.com/webscr'
+        url = 'https://www.sandbox.paypal.com/checkoutnow/2'
     else:
-        url = 'https://www.paypal.com/webscr'
-    params = (('cmd', '_express-checkout'),
-              ('token', txn.token),)
+        url = 'https://www.paypal.com/checkoutnow/2'
+    params = (('token', txn.token),)
     return '%s?%s' % (url, urlencode(params))
 
 
