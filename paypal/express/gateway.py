@@ -43,26 +43,27 @@ def _format_currency(amt):
     return amt.quantize(D('0.01'))
 
 
+def redis_connection(settings):
+    return redis.StrictRedis(
+        host=settings.PAYPAL_REDIS_HOST,
+        port=settings.PAYPAL_REDIS_PORT,
+        db=settings.PAYPAL_REDIS_DB,
+        charset='utf-8',
+        decode_responses=True)
+
+
 def _get_token_api_type(token, settings):
     """
     Connect to Redis and retrieve the currency code for the token
     """
-    redis_connection = redis.StrictRedis(
-        host=settings.PAYPAL_REDIS_HOST,
-        port=settings.PAYPAL_REDIS_PORT,
-        db=settings.PAYPAL_REDIS_DB)
-    return redis_connection.get(token)
+    return redis_connection(settings).get(token)
 
 
 def _set_token_api_type(token, currency_code, settings):
     """
     Save the currency code to redis using the token as a key
     """
-    redis_connection = redis.StrictRedis(
-        host=settings.PAYPAL_REDIS_HOST,
-        port=settings.PAYPAL_REDIS_PORT,
-        db=settings.PAYPAL_REDIS_DB)
-    return redis_connection.set(token, currency_code)
+    return redis_connection(settings).set(token, currency_code)
 
 
 def _fetch_response(method, extra_params):
@@ -78,11 +79,11 @@ def _fetch_response(method, extra_params):
         'SIGNATURE': settings.PAYPAL_API_SIGNATURE,
     }
     us_params = {
-        'USER': settings.PAYPAL_US_API_USERNAME,
-        'PWD': settings.PAYPAL_US_API_PASSWORD,
-        'SIGNATURE': settings.PAYPAL_US_API_SIGNATURE,
+        'USER': settings.PAYPAL_API_US_USERNAME,
+        'PWD': settings.PAYPAL_API_US_PASSWORD,
+        'SIGNATURE': settings.PAYPAL_API_US_SIGNATURE,
     }
-    # Use different API keys for the US
+    # Use different API keys for US dollars
     currency = extra_params.get('PAYMENTREQUEST_0_CURRENCYCODE')
     if currency == 'USD':
         params.update(us_params)
