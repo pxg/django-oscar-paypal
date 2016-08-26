@@ -2,6 +2,7 @@
 # 1.7 is still considered supported by django-oscar-paypal, ensure
 # using django-compressor 1.6 (which still supported Django 1.7).
 django-compressor==1.6
+redis==2.10.5
 
 # Testing
 mock==1.0.1

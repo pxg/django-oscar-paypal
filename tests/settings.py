@@ -7,6 +7,9 @@ from oscar.defaults import *
 try:
     from integration import *
 except ImportError:
+    PAYPAL_US_API_USERNAME = ''
+    PAYPAL_US_API_PASSWORD = ''
+    PAYPAL_US_API_SIGNATURE = ''
     PAYPAL_API_USERNAME = ''
     PAYPAL_API_PASSWORD = ''
     PAYPAL_API_SIGNATURE = ''

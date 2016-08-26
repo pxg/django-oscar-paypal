@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import logging
 from decimal import Decimal as D
 
+import redis
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.http import urlencode
@@ -42,6 +43,25 @@ def _format_currency(amt):
     return amt.quantize(D('0.01'))
 
 
+# TODO: needs tests
+def _get_token_api_type(token, settings):
+    """
+    This will need to be replace with redis or something which isn't
+    constrained to one server
+    """
+    return 'GBP'
+    # with open('/tmp/paypal_{}'.format(token), 'r') as my_file:
+    #     return my_file.read().replace('\n', '')
+
+
+# TODO: needs tests
+def _set_token_api_type(token, currency_code, settings):
+    #r = redis.StrictRedis(host='localhost', port=6379, db=0)
+    pass
+    # with open('/tmp/paypal_{}'.format(token), 'w') as my_file:
+    #     my_file.write(currency_code)
+
+
 def _fetch_response(method, extra_params):
     """
     Fetch the response from PayPal and return a transaction object
@@ -54,6 +74,20 @@ def _fetch_response(method, extra_params):
         'PWD': settings.PAYPAL_API_PASSWORD,
         'SIGNATURE': settings.PAYPAL_API_SIGNATURE,
     }
+    us_params = {
+        'USER': settings.PAYPAL_US_API_USERNAME,
+        'PWD': settings.PAYPAL_US_API_PASSWORD,
+        'SIGNATURE': settings.PAYPAL_US_API_SIGNATURE,
+    }
+    # Use different API keys for the US
+    currency = extra_params.get('PAYMENTREQUEST_0_CURRENCYCODE')
+    if currency == 'USD':
+        params.update(us_params)
+    # If token is present retrieve the currency type for it
+    token = extra_params.get('TOKEN')
+    if token and _get_token_api_type(token, settings) == 'USD':
+        params.update(us_params)
+
     params.update(extra_params)
 
     if getattr(settings, 'PAYPAL_SANDBOX_MODE', True):
@@ -97,6 +131,8 @@ def _fetch_response(method, extra_params):
             txn.token = params['TOKEN']
             txn.amount = D(pairs['PAYMENTINFO_0_AMT'])
             txn.currency = pairs['PAYMENTINFO_0_CURRENCYCODE']
+        # Store token with currency type here
+        _set_token_api_type(txn.token, txn.currency, settings)
     else:
         # There can be more than one error, each with its own number.
         if 'L_ERRORCODE0' in pairs:
