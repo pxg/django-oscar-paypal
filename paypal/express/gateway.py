@@ -52,6 +52,10 @@ def redis_connection(settings):
         decode_responses=True)
 
 
+def _delete_token(token, settings):
+    return redis_connection(settings).delete(token)
+
+
 def _get_token_api_type(token, settings):
     """
     Connect to Redis and retrieve the currency code for the token
@@ -134,9 +138,7 @@ def _fetch_response(method, extra_params):
             txn.token = params['TOKEN']
             txn.amount = D(pairs['PAYMENTINFO_0_AMT'])
             txn.currency = pairs['PAYMENTINFO_0_CURRENCYCODE']
-            # Need to confirm this is the final payment and we should delete
-            # the token here
-            # import pdb; pdb.set_trace()
+            _delete_token(txn.token, settings)
         # Store token with currency type here
         _set_token_api_type(txn.token, txn.currency, settings)
     else:
