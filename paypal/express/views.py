@@ -292,6 +292,9 @@ class SuccessResponseView(PaymentDetailsView):
         """
         submission = super(
             SuccessResponseView, self).build_submission(**kwargs)
+        if settings.PAYPAL_OVERRIDE_EMAIL is True:
+            # Pass the user email so it can be stored with the order
+            submission['order_kwargs']['guest_email'] = self.txn.value('EMAIL')
         # Pass PP params
         submission['payment_kwargs']['payer_id'] = self.payer_id
         submission['payment_kwargs']['token'] = self.token

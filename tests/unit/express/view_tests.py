@@ -194,9 +194,6 @@ class SubmitOrderTests(MockedPayPalTests):
         self.assertEqual('david._1332854868_per@gmail.com',
                          self.order.guest_email)
 
-    def test_shipping_address_includes_line2(self):
-        self.assertEqual('line2', self.order.shipping_address.line2)
-
 
 class SubmitOrderErrorsTests(MockedPayPalTests):
 
