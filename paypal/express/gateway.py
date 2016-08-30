@@ -54,6 +54,19 @@ def _fetch_response(method, extra_params):
         'PWD': settings.PAYPAL_API_PASSWORD,
         'SIGNATURE': settings.PAYPAL_API_SIGNATURE,
     }
+    us_params = {
+        'USER': settings.PAYPAL_API_US_USERNAME,
+        'PWD': settings.PAYPAL_API_US_PASSWORD,
+        'SIGNATURE': settings.PAYPAL_API_US_SIGNATURE,
+    }
+    # Use different API keys for US dollars
+    currency = extra_params.get('PAYMENTREQUEST_0_CURRENCYCODE')
+    if currency == 'USD':
+        params.update(us_params)
+    # If token is present retrieve the currency type for it
+    token = extra_params.get('TOKEN')
+    if token and _get_token_api_type(token) == 'USD':
+        params.update(us_params)
     params.update(extra_params)
 
     if getattr(settings, 'PAYPAL_SANDBOX_MODE', True):
@@ -111,6 +124,18 @@ def _fetch_response(method, extra_params):
         raise exceptions.PayPalError(msg)
 
     return txn
+
+
+def _get_token_api_type(token):
+    """
+    Retrieve the currency code for the token from the database. If the look up
+    fails return nothing and the UK API keys will be used
+    """
+    try:
+        transactions = models.ExpressTransaction.objects.filter(token=token)
+        return transactions[0].currency
+    except IndexError:
+        return
 
 
 def set_txn(basket, shipping_methods, currency, return_url, cancel_url, update_url=None,
