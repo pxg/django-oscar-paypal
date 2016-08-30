@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 import logging
 from decimal import Decimal as D
 
-import redis
 from django.conf import settings
 from django.core.exceptions import ImproperlyConfigured
 from django.utils.http import urlencode
@@ -43,31 +42,16 @@ def _format_currency(amt):
     return amt.quantize(D('0.01'))
 
 
-def redis_connection(settings):
-    return redis.StrictRedis(
-        host=settings.PAYPAL_REDIS_HOST,
-        port=settings.PAYPAL_REDIS_PORT,
-        db=settings.PAYPAL_REDIS_DB,
-        charset='utf-8',
-        decode_responses=True)
-
-
-def _delete_token(token, settings):
-    return redis_connection(settings).delete(token)
-
-
-def _get_token_api_type(token, settings):
+def _get_token_api_type(token):
     """
-    Connect to Redis and retrieve the currency code for the token
+    Retrieve the currency code for the token from the database. If the look up
+    fails return nothing and the UK API keys will be used
     """
-    return redis_connection(settings).get(token)
-
-
-def _set_token_api_type(token, currency_code, settings):
-    """
-    Save the currency code to redis using the token as a key
-    """
-    return redis_connection(settings).set(token, currency_code)
+    try:
+        transactions = models.ExpressTransaction.objects.filter(token=token)
+        return transactions[0].currency
+    except IndexError:
+        return
 
 
 def _fetch_response(method, extra_params):
@@ -93,7 +77,7 @@ def _fetch_response(method, extra_params):
         params.update(us_params)
     # If token is present retrieve the currency type for it
     token = extra_params.get('TOKEN')
-    if token and _get_token_api_type(token, settings) == 'USD':
+    if token and _get_token_api_type(token) == 'USD':
         params.update(us_params)
     params.update(extra_params)
 
@@ -130,8 +114,6 @@ def _fetch_response(method, extra_params):
             txn.amount = params['PAYMENTREQUEST_0_AMT']
             txn.currency = params['PAYMENTREQUEST_0_CURRENCYCODE']
             txn.token = pairs['TOKEN']
-            # Store token with currency type here
-            _set_token_api_type(txn.token, txn.currency, settings)
         elif method == GET_EXPRESS_CHECKOUT:
             txn.token = params['TOKEN']
             txn.amount = D(pairs['PAYMENTREQUEST_0_AMT'])
@@ -140,7 +122,6 @@ def _fetch_response(method, extra_params):
             txn.token = params['TOKEN']
             txn.amount = D(pairs['PAYMENTINFO_0_AMT'])
             txn.currency = pairs['PAYMENTINFO_0_CURRENCYCODE']
-            _delete_token(txn.token, settings)
     else:
         # There can be more than one error, each with its own number.
         if 'L_ERRORCODE0' in pairs:

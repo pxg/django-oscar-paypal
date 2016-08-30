@@ -7,17 +7,14 @@ from oscar.defaults import *
 try:
     from integration import *
 except ImportError:
-    PAYPAL_US_API_USERNAME = ''
-    PAYPAL_US_API_PASSWORD = ''
-    PAYPAL_US_API_SIGNATURE = ''
+    PAYPAL_API_US_USERNAME = ''
+    PAYPAL_API_US_PASSWORD = ''
+    PAYPAL_API_US_SIGNATURE = ''
     PAYPAL_API_USERNAME = ''
     PAYPAL_API_PASSWORD = ''
     PAYPAL_API_SIGNATURE = ''
     PAYPAL_PAYFLOW_VENDOR_ID = ''
     PAYPAL_PAYFLOW_PASSWORD = ''
-    PAYPAL_REDIS_HOST = 'localhost'
-    PAYPAL_REDIS_PORT = 6379
-    PAYPAL_REDIS_DB = 0
 
 SECRET_KEY = '9%d9&5!^+hcq!pin#0lfz(qj8j2h7y$p*rr-o#cy+)9%dyvwkn'
 DATABASES = {
