@@ -130,6 +130,8 @@ def _fetch_response(method, extra_params):
             txn.amount = params['PAYMENTREQUEST_0_AMT']
             txn.currency = params['PAYMENTREQUEST_0_CURRENCYCODE']
             txn.token = pairs['TOKEN']
+            # Store token with currency type here
+            _set_token_api_type(txn.token, txn.currency, settings)
         elif method == GET_EXPRESS_CHECKOUT:
             txn.token = params['TOKEN']
             txn.amount = D(pairs['PAYMENTREQUEST_0_AMT'])
@@ -139,8 +141,6 @@ def _fetch_response(method, extra_params):
             txn.amount = D(pairs['PAYMENTINFO_0_AMT'])
             txn.currency = pairs['PAYMENTINFO_0_CURRENCYCODE']
             _delete_token(txn.token, settings)
-        # Store token with currency type here
-        _set_token_api_type(txn.token, txn.currency, settings)
     else:
         # There can be more than one error, each with its own number.
         if 'L_ERRORCODE0' in pairs:
