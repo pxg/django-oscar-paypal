@@ -12,6 +12,8 @@ except ImportError:
     PAYPAL_API_SIGNATURE = ''
     PAYPAL_PAYFLOW_VENDOR_ID = ''
     PAYPAL_PAYFLOW_PASSWORD = ''
+    # Needed for tests to pass but LBW doesn't override the email
+    PAYPAL_OVERRIDE_EMAIL = True
 
 SECRET_KEY = '9%d9&5!^+hcq!pin#0lfz(qj8j2h7y$p*rr-o#cy+)9%dyvwkn'
 DATABASES = {
