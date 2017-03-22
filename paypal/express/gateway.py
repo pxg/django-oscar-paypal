@@ -40,9 +40,11 @@ def _format_description(description):
 
 def _format_currency(amt):
     """
-    amt is not guaranteed to be an integer so we cast to decimal
+    When amt is 0 it is an integer and we can't run quantize on it
     """
-    return D(amt).quantize(D('0.01'))
+    if amt == 0:
+        return D('0.00')
+    return amt.quantize(D('0.01'))
 
 
 def _fetch_response(method, extra_params):
