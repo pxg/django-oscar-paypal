@@ -39,7 +39,10 @@ def _format_description(description):
 
 
 def _format_currency(amt):
-    return amt.quantize(D('0.01'))
+    """
+    amt is not guaranteed to be an integer so we cast to decimal
+    """
+    return D(amt).quantize(D('0.01'))
 
 
 def _fetch_response(method, extra_params):
