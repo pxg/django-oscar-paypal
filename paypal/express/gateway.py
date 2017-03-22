@@ -39,6 +39,11 @@ def _format_description(description):
 
 
 def _format_currency(amt):
+    """
+    When amt is 0 it is an integer and we can't run quantize on it
+    """
+    if amt == 0:
+        return D('0.00')
     return amt.quantize(D('0.01'))
 
 
